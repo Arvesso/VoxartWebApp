@@ -1,0 +1,69 @@
+﻿@page "/Voice"
+@inherits BaseComponent
+
+<PageTitle>Voice</PageTitle>
+
+<header class="head">
+    <div class="navbar">
+        <img class="logo" src="media/logo.png" alt="">
+        <div class="menu">
+            <a href="/" class="menu-item">Главная</a>
+            <a href="/voice" class="menu-item">Синтезатор речи</a>
+            <a href="/library" class="menu-item">Галерея</a>
+            <a href="/avatar" class="menu-item">Нейроаватар</a>
+        </div>
+        <img class="user" src="media/user.png" alt="">
+    </div>
+</header>
+<main>
+    <h1>Синтезатор речи</h1>
+    <p class="creat">создай свой виртуальный голос</p>
+    <textarea @bind="InputValue" name="comment" placeholder="пиши тут" cols="40" rows="3"></textarea>
+
+    <div class="men" @onclick="SendRequestMale">
+        <h3 class="card-title">генерируй мужской голос</h3>
+    </div>
+    <div class="woman" @onclick="SendRequestFemale">
+        <h3 class="card-title">Генерируй женский голос</h3>
+    </div>
+
+    @if (Mp3Link != null)
+    {
+        <table>
+            <tr>
+                <td><audio controls src="@Mp3Link"></audio></td>
+                <td><a href="@Mp3Link" download>Скачать</a></td>
+            </tr>
+        </table>
+    }
+
+</main>
+
+@code {
+    private const string MALE = "Male";
+    private const string FEMALE = "Female";
+
+    private string? InputValue = null;
+    private string? Mp3Link = null;
+
+    private async Task SendRequestMale()
+    {
+        var response = await Http.GetStringAsync($"Api/key={Key}/gender={MALE}&text={InputValue}");
+
+        if (!string.IsNullOrEmpty(response))
+            Mp3Link = $"Storage/{Key}/" + response;
+    }
+
+    private async Task SendRequestFemale()
+    {
+        var response = await Http.GetStringAsync($"Api/key={Key}/gender={FEMALE}&text={InputValue}");
+
+        if (!string.IsNullOrEmpty(response))
+            Mp3Link = $"Storage/{Key}/" + response;
+    }
+
+    private bool IsValidInput(string input)
+    {
+        return input.All(c => (c >= 'а' && c <= 'я') || (c >= 'А' && c <= 'Я') || c == ' ');
+    }
+}

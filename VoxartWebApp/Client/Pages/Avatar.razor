@@ -1,0 +1,99 @@
+﻿@page "/Avatar"
+@inherits BaseComponent
+@using VoxartWebApp.Shared.Modules.Avatar
+
+<PageTitle>Avatar</PageTitle>
+
+<header class="head">
+    <div class="navbar">
+        <img class="logo" src="media/logo.png" alt="">
+        <div class="menu">
+            <a href="/" class="menu-item">Главная</a>
+            <a href="/voice" class="menu-item">Синтезатор речи</a>
+            <a href="/library" class="menu-item">Галерея</a>
+            <a href="/avatar" class="menu-item">Нейроаватар</a>
+        </div>
+        <img class="user" src="media/user.png" alt="">
+    </div>
+</header>
+<main>
+    <h1>Нейроаватар</h1>
+    <p class="creat">Оживи свою идею</p>
+    <textarea @bind="InputValue" name="comment" placeholder="Пиши тут" cols="40" rows="3"></textarea>
+
+    <div class="buttons">
+        @if (string.IsNullOrEmpty(ImageSource))
+        {
+            <InputFile class="uploadButton" OnChange="@OnChange" single />
+        }
+        else
+        {
+            <select @bind="SelectedOption">
+                <option value="Male">Мужской голос</option>
+                <option value="Female">Женский голос</option>
+            </select>
+            <button class="generateButton" @onclick="SendRequest">Генерируй</button>
+        }
+    </div>
+
+    <div class="video">
+        @if (Mp4Link != null)
+        {
+            <video id="video">
+                <source src="@Mp4Link" type="video/mp4">
+                Ваш браузер не поддерживает видео тег.
+            </video>
+        }
+    </div>
+</main>
+
+@code {
+    private string SelectedOption { get; set; } = "Male";
+
+    private string? InputValue;
+    private string? Mp4Link;
+
+    private string? ImageSource;
+    private string? ErrorMessage;
+
+    private async Task SendRequest()
+    {
+        if (ImageSource != null)
+        {
+            var content = new RequestModel
+            {
+                Text = InputValue!,
+                ImageAvatar = ImageSource
+            };
+
+            var response = await Http.PostAsJsonAsync($"Api/key={Key}/gender={SelectedOption}", content);
+
+            if (response.IsSuccessStatusCode)
+                Mp4Link = $"Storage/{Key}/" + await response.Content.ReadAsStringAsync();
+        }
+    }
+
+    private bool IsValidInput(string input)
+    {
+        return input.All(c => (c >= 'а' && c <= 'я') || (c >= 'А' && c <= 'Я') || c == ' ');
+    }
+
+    async Task OnChange(InputFileChangeEventArgs e)
+    {
+        ImageSource = null;
+        ErrorMessage = null;
+
+        if (e.FileCount > 1)
+        {
+            ErrorMessage = "Only 1 files can be uploaded";
+            return;
+        }
+
+        var file = e.File;
+
+        using var stream = file.OpenReadStream();
+        using var ms = new MemoryStream();
+        await stream.CopyToAsync(ms);
+        ImageSource = Convert.ToBase64String(ms.ToArray());
+    }
+}

@@ -1,0 +1,107 @@
+﻿@page "/Library"
+@inherits BaseComponent
+@using VoxartWebApp.Shared.Modules.Files
+
+<PageTitle>Library</PageTitle>
+
+<header class="head">
+    <div class="navbar">
+        <img class="logo" src="media/logo.png" alt="">
+        <div class="menu">
+            <a href="/" class="menu-item">Главная</a>
+            <a href="/voice" class="menu-item">Синтезатор речи</a>
+            <a href="/library" class="menu-item">Галерея</a>
+            <a href="/avatar" class="menu-item">Нейроаватар</a>
+        </div>
+        <img class="user" src="media/user.png" alt="">
+    </div>
+</header>
+<main>
+    <h1>Галерея</h1>
+    <p class="creat">твои креативные проекты</p>
+    <div class="speech">
+        <h3>Синтезированная речь</h3>
+        <select @bind="SelectAvatar">
+            <option selected value="NULL">Выбор аватара</option>
+            @if (Avatars != null)
+            {
+                int counter = 1;
+                foreach (var avatar in Avatars)
+                {
+                    <option value="@avatar">Аватар @counter</option>
+                    counter++;
+                }
+            }
+        </select>
+        @if (SelectAvatar != "NULL")
+        {
+            <a href="Storage/@Key/@SelectAvatar" target="_blank">
+                <button class="download">Скачать</button>
+            </a>
+        }
+        <a href=""><img class="share" src="media/share.png" alt=""></a>
+    </div>
+    <div class="neuroavatar">
+        <h3>Нейроаватары</h3>
+        <select @bind="SelectVideo">
+            <option selected value="NULL">Выбор видео</option>
+            @if (Videos != null)
+            {
+                int counter = 1;
+                foreach (var video in Videos)
+                {
+                    <option value="@video">Видео @counter</option>
+                    counter++;
+                }
+            }
+        </select>
+        @if (SelectVideo != "NULL")
+        {
+            <a href="Storage/@Key/@SelectVideo" target="_blank">
+                <button class="download">Скачать</button>
+            </a>
+        }
+        <a href=""><img class="share" src="media/share.png" alt=""></a>
+    </div>
+    <div class="vid">
+        <h3>Видео</h3>
+        <select @bind="SelectAudio">
+            <option selected value="NULL">Выбор аудио</option>
+            @if (Audios != null)
+            {
+                int counter = 1;
+                foreach (var audio in Audios)
+                {
+                    <option value="@audio">Аудио @counter</option>
+                    counter++;
+                }
+            }
+        </select>
+        @if (SelectAudio != "NULL")
+        {
+            <a href="Storage/@Key/@SelectAudio" target="_blank">
+                <button class="download">Скачать</button>
+            </a>
+        }
+        <a href=""><img class="share" src="media/share.png" alt=""></a>
+    </div>
+</main>
+
+@code {
+    private string SelectAvatar { get; set; } = "NULL";
+    private string SelectAudio { get; set; } = "NULL";
+    private string SelectVideo { get; set; } = "NULL";
+
+    private string[]? Avatars { get; set; }
+    private string[]? Audios { get; set; }
+    private string[]? Videos { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+
+        Avatars = await Http.GetFromJsonAsync<string[]>($"storage/{Key}/filestype={FileType.Image.ToString()}");
+        Audios = await Http.GetFromJsonAsync<string[]>($"storage/{Key}/filestype={FileType.Audio.ToString()}");
+        Videos = await Http.GetFromJsonAsync<string[]>($"storage/{Key}/filestype={FileType.Video.ToString()}");
+    }
+}
